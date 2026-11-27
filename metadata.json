@@ -1,0 +1,6 @@
+{
+  "name": "Atelier XR",
+  "description": "Scan your room, detect walls, and hang classic museum paintings in mixed reality using mouse, Meta Quest controllers, or hand tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
