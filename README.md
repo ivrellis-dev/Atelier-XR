@@ -4,12 +4,17 @@ A WebXR spatial gallery built with **XR Blocks** and **Three.js** that runs on d
 
 ## Hosting on GitHub Pages (HTTPS for Meta Quest 3)
 
-WebXR requires a secure HTTPS origin, which GitHub Pages provides automatically:
+WebXR requires a secure HTTPS origin, which GitHub Pages provides automatically. Because `index.html` is a **self-contained single HTML file using pure JavaScript** (ESM import maps + procedural canvas paintings), you can host it in two ways:
 
+### Option A: Zero-Build Static Hosting (Single `index.html`)
+1. Copy `index.html` into a GitHub repository on the `main` branch.
+2. Open **Settings → Pages**, set **Source** to **Deploy from a branch**, and select `main` / `/ (root)`.
+3. Open `https://<username>.github.io/<repo>/` on desktop or in the **Meta Quest Browser** on Quest 3.
+
+### Option B: GitHub Actions Workflow
 1. Push this repository to GitHub with `main` as your default branch.
-2. In your repository settings, open **Settings → Pages** and set **Source** to **GitHub Actions**.
-3. Push to `main` (or trigger **Deploy Atelier XR to GitHub Pages** manually in the **Actions** tab).
-4. Open your published `https://<username>.github.io/<repo>/` URL on desktop or inside the **Meta Quest Browser** on Quest 3.
+2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
+3. Push to `main` (or trigger **Deploy Atelier XR to GitHub Pages** manually in **Actions**).
 
 ## Local Development
 
@@ -18,7 +23,7 @@ npm install
 npm run dev
 ```
 
-To create a production build locally:
+To verify the Vite build locally:
 
 ```bash
 npm run lint

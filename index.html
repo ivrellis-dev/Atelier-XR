@@ -2,12 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
     <meta name="theme-color" content="#0b0d12" />
-    <title>Atelier XR</title>
-    <meta name="description" content="Scan your room, detect walls, and hang classic museum paintings in mixed reality using mouse, Meta Quest controllers, or hand tracking." />
-    <meta property="og:title" content="Atelier XR" />
-    <meta property="og:description" content="Scan your room, detect walls, and hang classic museum paintings in mixed reality using mouse, Meta Quest controllers, or hand tracking." />
+    <title>Atelier XR — Spatial Classic Gallery</title>
+    <meta
+      name="description"
+      content="Single-file WebXR spatial gallery for desktop and Meta Quest 3. Scan real-world walls and hang classic masterpieces using mouse, controllers, or hand tracking."
+    />
+    <meta property="og:title" content="Atelier XR — Spatial Classic Gallery" />
+    <meta
+      property="og:description"
+      content="Scan your room, detect walls, and hang classic museum paintings in mixed reality using mouse, Meta Quest controllers, or hand tracking."
+    />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link
@@ -15,10 +24,2461 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2312151c'/%3E%3Crect x='12' y='14' width='40' height='36' rx='3' fill='none' stroke='%23e6c36c' stroke-width='4'/%3E%3Crect x='20' y='22' width='24' height='20' fill='%232e5ea8'/%3E%3Ccircle cx='36' cy='28' r='4' fill='%23f7d774'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./src/index.css" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Google+Sans');
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Google Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 50% 30%, #1c2230 0%, #090b10 75%);
+        color: #fff;
+        line-height: 24px;
+        overscroll-behavior: none;
+      }
+
+      button {
+        cursor: pointer;
+        pointer-events: auto;
+      }
+
+      #XRButtonWrapper {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        text-align: center;
+        pointer-events: none;
+        padding: 1.5rem;
+      }
+
+      #XRButtonWrapper > * {
+        pointer-events: auto;
+      }
+
+      #XRButtonWrapper h1 {
+        font-weight: 400;
+        font-size: 2.5rem;
+        margin: 0;
+        color: #fff;
+        letter-spacing: -0.02rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      }
+
+      .XRButton {
+        background: linear-gradient(135deg, #d4e8ff 50%, #d0a8e3 100%);
+        color: #000;
+        border: none;
+        cursor: pointer;
+        text-transform: none;
+        border-radius: 9999px;
+        font-family: 'Google Sans', sans-serif;
+        font-weight: 400;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 22px 42px;
+        min-width: 240px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.25);
+      }
+
+      .XRButton::after {
+        content: '';
+        display: block;
+        width: 24px;
+        height: 24px;
+        background: url("data:image/svg+xml,%3Csvg width='28' height='28' viewBox='0 0 28 28' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.9998 4.66699L12.3548 6.31199L18.8648 12.8337H4.6665V15.167H18.8648L12.3548 21.6887L13.9998 23.3337L23.3332 14.0003L13.9998 4.66699Z' fill='black'/%3E%3C/svg%3E")
+          no-repeat center center;
+        background-size: contain;
+      }
+
+      .XRButton:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .XRButton:active {
+        transform: scale(0.98);
+      }
+    </style>
+    <script>
+      window.litDisableBundleWarning = true;
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js",
+          "three/": "https://cdn.jsdelivr.net/npm/three@0.186.0/",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/",
+          "lit": "https://esm.sh/lit@3.3.1",
+          "lit/": "https://esm.sh/lit@3.3.1/",
+          "@pmndrs/uikit": "https://cdn.jsdelivr.net/npm/@pmndrs/uikit@1.0.64/dist/index.min.js",
+          "@pmndrs/uikit-pub-sub": "https://cdn.jsdelivr.net/npm/@pmndrs/uikit-pub-sub@1.0.64/dist/index.min.js",
+          "@pmndrs/msdfonts": "https://cdn.jsdelivr.net/npm/@pmndrs/msdfonts@1.0.64/dist/index.min.js",
+          "@preact/signals-core": "https://cdn.jsdelivr.net/npm/@preact/signals-core@1.14.0/dist/signals-core.mjs",
+          "yoga-layout/load": "https://cdn.jsdelivr.net/npm/yoga-layout@3.2.1/dist/src/load.js",
+          "xrblocks": "https://cdn.jsdelivr.net/npm/xrblocks@0.24.0/build/xrblocks.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="./src/index.ts"></script>
+    <script type="module">
+      import * as THREE from 'three';
+      import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+      import * as xb from 'xrblocks';
+
+      // =========================================================================
+      // 1. Procedural Museum Painting Artwork Generators (Zero external 404/CORS)
+      // =========================================================================
+
+      function seededRandom(seed) {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 4294967296;
+        };
+      }
+
+      function addCanvasTextureGrain(ctx, w, h, alpha = 0.045) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < w; x += 6) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = '#000000';
+        for (let y = 0; y < h; y += 6) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawStarryNight(w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        const rng = seededRandom(1889);
+
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.78);
+        sky.addColorStop(0, '#0a1847');
+        sky.addColorStop(0.55, '#1b3e8c');
+        sky.addColorStop(1, '#4f7fc4');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Swirling impasto sky strokes
+        const swirlColors = ['#132c73', '#2352a8', '#3c77cc', '#7aa9e6', '#d8e4f5', '#f2da74'];
+        for (let i = 0; i < 420; i++) {
+          const x = rng() * w;
+          const y = rng() * h * 0.72;
+          const angle = Math.sin(x * 0.014) * 0.8 + Math.cos(y * 0.018) * 0.6;
+          const len = 14 + rng() * 28;
+          ctx.strokeStyle = swirlColors[Math.floor(rng() * swirlColors.length)];
+          ctx.lineWidth = 3 + rng() * 5;
+          ctx.lineCap = 'round';
+          ctx.globalAlpha = 0.55 + rng() * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.quadraticCurveTo(
+            x + Math.cos(angle) * len * 0.5,
+            y + Math.sin(angle) * len * 0.5 - 5,
+            x + Math.cos(angle) * len,
+            y + Math.sin(angle) * len
+          );
+          ctx.stroke();
+        }
+
+        // Central spiral nebula
+        ctx.globalAlpha = 0.82;
+        for (let t = 0; t < Math.PI * 5; t += 0.14) {
+          const r = 6 + t * 5.5;
+          const sx = w * 0.47 + Math.cos(t) * r;
+          const sy = h * 0.34 + Math.sin(t) * r * 0.68;
+          ctx.strokeStyle = t % 0.5 < 0.25 ? '#9bc2f2' : '#2a5db8';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 4, t, t + 0.8);
+          ctx.stroke();
+        }
+
+        // Glowing stars & crescent moon
+        const stars = [
+          [0.14, 0.14, 22],
+          [0.33, 0.11, 18],
+          [0.57, 0.15, 24],
+          [0.42, 0.54, 30],
+          [0.69, 0.28, 22],
+          [0.29, 0.31, 16],
+        ];
+        for (const [nx, ny, radius] of stars) {
+          const cx = w * nx;
+          const cy = h * ny;
+          const glow = ctx.createRadialGradient(cx, cy, 2, cx, cy, radius * 1.6);
+          glow.addColorStop(0, 'rgba(255, 244, 175, 0.95)');
+          glow.addColorStop(0.45, 'rgba(245, 209, 92, 0.55)');
+          glow.addColorStop(1, 'rgba(60, 119, 204, 0)');
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = glow;
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius * 1.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Crescent moon
+        const mx = w * 0.86;
+        const my = h * 0.21;
+        const moonGlow = ctx.createRadialGradient(mx, my, 12, mx, my, 68);
+        moonGlow.addColorStop(0, 'rgba(255, 232, 118, 0.95)');
+        moonGlow.addColorStop(0.5, 'rgba(240, 198, 74, 0.45)');
+        moonGlow.addColorStop(1, 'rgba(35, 82, 168, 0)');
+        ctx.fillStyle = moonGlow;
+        ctx.beginPath();
+        ctx.arc(mx, my, 68, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f8cb46';
+        ctx.beginPath();
+        ctx.arc(mx, my, 27, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#2c5fb5';
+        ctx.beginPath();
+        ctx.arc(mx - 10, my - 4, 21, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rolling blue hills
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#142959';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.72);
+        ctx.bezierCurveTo(w * 0.3, h * 0.62, w * 0.62, h * 0.78, w, h * 0.64);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Village & glowing windows
+        ctx.fillStyle = '#0e172c';
+        ctx.fillRect(0, h * 0.78, w, h * 0.22);
+        const houses = [
+          [0.36, 0.81, 34, 26],
+          [0.44, 0.8, 42, 30],
+          [0.54, 0.79, 28, 34],
+          [0.64, 0.82, 46, 26],
+          [0.76, 0.81, 36, 28],
+        ];
+        for (const [hx, hy, hw, hh] of houses) {
+          ctx.fillStyle = '#1f2d47';
+          ctx.fillRect(w * hx, h * hy, hw, hh);
+          ctx.fillStyle = '#f7d160';
+          ctx.fillRect(w * hx + 7, h * hy + 8, 8, 8);
+          ctx.fillRect(w * hx + hw - 15, h * hy + 8, 8, 8);
+        }
+        // Church spire
+        ctx.fillStyle = '#253554';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.56, h * 0.79);
+        ctx.lineTo(w * 0.575, h * 0.63);
+        ctx.lineTo(w * 0.59, h * 0.79);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dark flame cypress tree
+        ctx.fillStyle = '#0c1c18';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.14, h);
+        ctx.bezierCurveTo(w * 0.11, h * 0.55, w * 0.17, h * 0.28, w * 0.2, h * 0.1);
+        ctx.bezierCurveTo(w * 0.23, h * 0.32, w * 0.29, h * 0.58, w * 0.31, h);
+        ctx.closePath();
+        ctx.fill();
+        for (let i = 0; i < 60; i++) {
+          ctx.strokeStyle = i % 2 === 0 ? '#183328' : '#08120f';
+          ctx.lineWidth = 4;
+          const cy = h * (0.2 + rng() * 0.76);
+          const cx = w * (0.16 + rng() * 0.1);
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.quadraticCurveTo(cx + 8, cy - 22, cx - 2, cy - 42);
+          ctx.stroke();
+        }
+
+        addCanvasTextureGrain(ctx, w, h, 0.05);
+        return canvas;
+      }
+
+      function drawMonaLisa(w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        // Tuscan misty landscape
+        const sky = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+        sky.addColorStop(0, '#5a6e63');
+        sky.addColorStop(0.55, '#8a916b');
+        sky.addColorStop(1, '#7c6b48');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = '#4f5d4e';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.32);
+        ctx.quadraticCurveTo(w * 0.28, h * 0.24, w * 0.55, h * 0.34);
+        ctx.quadraticCurveTo(w * 0.78, h * 0.26, w, h * 0.33);
+        ctx.lineTo(w, h * 0.58);
+        ctx.lineTo(0, h * 0.58);
+        ctx.closePath();
+        ctx.fill();
+
+        // Winding distant river
+        ctx.strokeStyle = '#6c8075';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.06, h * 0.43);
+        ctx.bezierCurveTo(w * 0.22, h * 0.45, w * 0.16, h * 0.5, w * 0.32, h * 0.52);
+        ctx.stroke();
+
+        // Seated Renaissance silhouette & dark gown
+        ctx.fillStyle = '#19140e';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.16, h);
+        ctx.bezierCurveTo(w * 0.19, h * 0.58, w * 0.32, h * 0.44, w * 0.5, h * 0.44);
+        ctx.bezierCurveTo(w * 0.68, h * 0.44, w * 0.81, h * 0.58, w * 0.85, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Warm velvet sleeves
+        const sleeve = ctx.createLinearGradient(w * 0.2, h * 0.65, w * 0.8, h * 0.95);
+        sleeve.addColorStop(0, '#4a3219');
+        sleeve.addColorStop(0.5, '#684822');
+        sleeve.addColorStop(1, '#22170d');
+        ctx.fillStyle = sleeve;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.35, h * 0.82, w * 0.16, h * 0.15, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(w * 0.68, h * 0.82, w * 0.14, h * 0.15, -0.25, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Neck & chest sfumato glow
+        const skinGrad = ctx.createRadialGradient(w * 0.48, h * 0.38, 12, w * 0.48, h * 0.42, w * 0.28);
+        skinGrad.addColorStop(0, '#e0bc88');
+        skinGrad.addColorStop(0.6, '#b88f59');
+        skinGrad.addColorStop(1, '#4c381f');
+        ctx.fillStyle = skinGrad;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.49, h * 0.51, w * 0.12, h * 0.11, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dark hair & veil
+        ctx.fillStyle = '#1b140d';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.49, h * 0.31, w * 0.17, h * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Face oval
+        ctx.fillStyle = skinGrad;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.48, h * 0.3, w * 0.115, h * 0.145, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Subtle eyes, nose shadow, and enigmatic smile
+        ctx.fillStyle = '#2d1e12';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.435, h * 0.275, 8, 4, 0, 0, Math.PI * 2);
+        ctx.ellipse(w * 0.525, h * 0.275, 8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#5c3c22';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.445, h * 0.355);
+        ctx.quadraticCurveTo(w * 0.48, h * 0.365, w * 0.518, h * 0.352);
+        ctx.stroke();
+
+        // Folded hands
+        ctx.fillStyle = '#c89e68';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.5, h * 0.81, w * 0.14, h * 0.055, -0.05, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Warm museum varnish vignette
+        const vig = ctx.createRadialGradient(w * 0.5, h * 0.45, w * 0.2, w * 0.5, h * 0.5, h * 0.72);
+        vig.addColorStop(0, 'rgba(235, 196, 120, 0.05)');
+        vig.addColorStop(1, 'rgba(18, 12, 6, 0.52)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, w, h);
+
+        addCanvasTextureGrain(ctx, w, h, 0.04);
+        return canvas;
+      }
+
+      function drawPearlEarring(w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        // Deep velvety dark background
+        const bg = ctx.createRadialGradient(w * 0.45, h * 0.42, 40, w * 0.5, h * 0.5, h * 0.75);
+        bg.addColorStop(0, '#1e1b16');
+        bg.addColorStop(1, '#090806');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        // Ochre jacket
+        const coat = ctx.createLinearGradient(w * 0.25, h * 0.55, w * 0.85, h);
+        coat.addColorStop(0, '#b98834');
+        coat.addColorStop(0.55, '#82581d');
+        coat.addColorStop(1, '#261a0c');
+        ctx.fillStyle = coat;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.24, h);
+        ctx.bezierCurveTo(w * 0.28, h * 0.66, w * 0.46, h * 0.56, w * 0.64, h * 0.56);
+        ctx.bezierCurveTo(w * 0.78, h * 0.62, w * 0.86, h * 0.8, w * 0.88, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crisp white collar
+        ctx.fillStyle = '#efe7d6';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.41, h * 0.62);
+        ctx.lineTo(w * 0.58, h * 0.53);
+        ctx.lineTo(w * 0.64, h * 0.6);
+        ctx.lineTo(w * 0.47, h * 0.68);
+        ctx.closePath();
+        ctx.fill();
+
+        // Face & neck chiaroscuro
+        const skin = ctx.createRadialGradient(w * 0.4, h * 0.4, 15, w * 0.44, h * 0.42, w * 0.24);
+        skin.addColorStop(0, '#f5d7bd');
+        skin.addColorStop(0.65, '#cfa07e');
+        skin.addColorStop(1, '#6a4431');
+        ctx.fillStyle = skin;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.43, h * 0.42, w * 0.135, h * 0.16, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ultramarine blue turban
+        const turban = ctx.createLinearGradient(w * 0.28, h * 0.18, w * 0.7, h * 0.45);
+        turban.addColorStop(0, '#4f8bd6');
+        turban.addColorStop(0.55, '#255294');
+        turban.addColorStop(1, '#102447');
+        ctx.fillStyle = turban;
+        ctx.beginPath();
+        ctx.ellipse(w * 0.5, h * 0.28, w * 0.2, h * 0.15, -0.18, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trailing yellow headscarf drape
+        const sash = ctx.createLinearGradient(w * 0.62, h * 0.22, w * 0.78, h * 0.72);
+        sash.addColorStop(0, '#ebd07c');
+        sash.addColorStop(0.6, '#b88b37');
+        sash.addColorStop(1, '#4c3818');
+        ctx.fillStyle = sash;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.55, h * 0.16);
+        ctx.quadraticCurveTo(w * 0.78, h * 0.22, w * 0.77, h * 0.72);
+        ctx.lineTo(w * 0.64, h * 0.68);
+        ctx.quadraticCurveTo(w * 0.64, h * 0.36, w * 0.5, h * 0.25);
+        ctx.closePath();
+        ctx.fill();
+
+        // Expressive eyes & coral lips
+        ctx.fillStyle = '#241812';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.36, h * 0.39, 7, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(w * 0.46, h * 0.39, 8, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(w * 0.355, h * 0.388, 2, 0, Math.PI * 2);
+        ctx.arc(w * 0.455, h * 0.388, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#c45b4e';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.385, h * 0.495, 11, 5, 0.05, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gleaming Pearl Earring
+        const px = w * 0.565;
+        const py = h * 0.48;
+        const pearl = ctx.createRadialGradient(px - 4, py - 5, 2, px, py, 14);
+        pearl.addColorStop(0, '#ffffff');
+        pearl.addColorStop(0.45, '#dfd9cd');
+        pearl.addColorStop(1, '#585249');
+        ctx.fillStyle = pearl;
+        ctx.beginPath();
+        ctx.ellipse(px, py, 12, 15, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        addCanvasTextureGrain(ctx, w, h, 0.04);
+        return canvas;
+      }
+
+      function drawGreatWave(w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+
+        // Warm washi paper sky
+        const sky = ctx.createLinearGradient(0, 0, 0, h);
+        sky.addColorStop(0, '#e8dac0');
+        sky.addColorStop(0.55, '#f2e8d4');
+        sky.addColorStop(1, '#d9cbb2');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, w, h);
+
+        // Distant Mount Fuji
+        ctx.fillStyle = '#2d4768';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.52, h * 0.66);
+        ctx.lineTo(w * 0.68, h * 0.49);
+        ctx.lineTo(w * 0.85, h * 0.66);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#faf7f0';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.635, h * 0.54);
+        ctx.lineTo(w * 0.68, h * 0.49);
+        ctx.lineTo(w * 0.725, h * 0.54);
+        ctx.lineTo(w * 0.7, h * 0.555);
+        ctx.lineTo(w * 0.68, h * 0.535);
+        ctx.lineTo(w * 0.66, h * 0.555);
+        ctx.closePath();
+        ctx.fill();
+
+        // Deep Prussian blue sea swell
+        ctx.fillStyle = '#12315c';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.62);
+        ctx.bezierCurveTo(w * 0.15, h * 0.25, w * 0.35, h * 0.22, w * 0.5, h * 0.36);
+        ctx.bezierCurveTo(w * 0.4, h * 0.42, w * 0.34, h * 0.58, w * 0.58, h * 0.72);
+        ctx.bezierCurveTo(w * 0.76, h * 0.78, w * 0.88, h * 0.62, w, h * 0.7);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lighter wave stripes
+        ctx.strokeStyle = '#3b6ea5';
+        ctx.lineWidth = 10;
+        for (let i = 0; i < 6; i++) {
+          ctx.beginPath();
+          ctx.moveTo(w * (0.04 + i * 0.04), h * 0.82);
+          ctx.quadraticCurveTo(w * (0.14 + i * 0.04), h * 0.45, w * (0.44 + i * 0.02), h * (0.32 + i * 0.03));
+          ctx.stroke();
+        }
+
+        // Foreground secondary wave peak
+        ctx.fillStyle = '#1b477a';
+        ctx.beginPath();
+        ctx.moveTo(w * 0.16, h * 0.92);
+        ctx.quadraticCurveTo(w * 0.34, h * 0.56, w * 0.56, h * 0.88);
+        ctx.lineTo(w * 0.16, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // White clawed wave foam crests
+        ctx.fillStyle = '#f8f5ec';
+        ctx.strokeStyle = '#183354';
+        ctx.lineWidth = 2;
+        const claws = [
+          [0.44, 0.28, 36],
+          [0.49, 0.32, 32],
+          [0.54, 0.37, 28],
+          [0.37, 0.26, 30],
+          [0.29, 0.3, 28],
+          [0.34, 0.64, 24],
+        ];
+        for (const [cx, cy, r] of claws) {
+          ctx.beginPath();
+          ctx.arc(w * cx, h * cy, r, Math.PI * 0.8, Math.PI * 2.1);
+          ctx.lineTo(w * cx + r * 0.8, h * cy + r * 0.7);
+          ctx.quadraticCurveTo(w * cx, h * cy + r * 0.3, w * cx - r * 0.8, h * cy + r * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Sea spray dots
+        const rng = seededRandom(1831);
+        for (let i = 0; i < 90; i++) {
+          ctx.fillStyle = '#fbf9f2';
+          ctx.beginPath();
+          ctx.arc(w * (0.25 + rng() * 0.4), h * (0.2 + rng() * 0.45), 1.5 + rng() * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        addCanvasTextureGrain(ctx, w, h, 0.04);
+        return canvas;
+      }
+
+      function drawWaterLilies(w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        const rng = seededRandom(1919);
+
+        // Shimmering pond reflection gradient
+        const water = ctx.createLinearGradient(0, 0, w, h);
+        water.addColorStop(0, '#2a6b73');
+        water.addColorStop(0.35, '#4b7aa6');
+        water.addColorStop(0.55, '#9d8fc2');
+        water.addColorStop(0.8, '#418075');
+        water.addColorStop(1, '#1d5259');
+        ctx.fillStyle = water;
+        ctx.fillRect(0, 0, w, h);
+
+        // Impressionist dappled water strokes
+        const waterColors = ['#69a3b8', '#b8a8d9', '#f2e0a7', '#35786e', '#285778', '#83c2b0'];
+        for (let i = 0; i < 360; i++) {
+          ctx.fillStyle = waterColors[Math.floor(rng() * waterColors.length)];
+          ctx.globalAlpha = 0.35 + rng() * 0.4;
+          const rx = rng() * w;
+          const ry = rng() * h;
+          ctx.beginPath();
+          ctx.ellipse(rx, ry, 14 + rng() * 34, 4 + rng() * 8, (rng() - 0.5) * 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Drooping willow branches at top corners
+        ctx.globalAlpha = 0.78;
+        for (let i = 0; i < 48; i++) {
+          const side = i % 2 === 0 ? rng() * w * 0.34 : w - rng() * w * 0.32;
+          ctx.strokeStyle = i % 3 === 0 ? '#6ca84c' : '#3a7538';
+          ctx.lineWidth = 3 + rng() * 3;
+          ctx.beginPath();
+          ctx.moveTo(side, 0);
+          ctx.quadraticCurveTo(side + (rng() - 0.5) * 24, h * 0.2, side + (rng() - 0.5) * 20, h * (0.22 + rng() * 0.22));
+          ctx.stroke();
+        }
+
+        // Floating lily pads & pink/cream blossoms
+        ctx.globalAlpha = 1;
+        const clusters = [
+          [0.24, 0.72, 1.0],
+          [0.42, 0.58, 0.75],
+          [0.74, 0.66, 0.92],
+          [0.18, 0.48, 0.65],
+          [0.82, 0.42, 0.68],
+        ];
+        for (const [cx, cy, sc] of clusters) {
+          for (let j = 0; j < 7; j++) {
+            const px = w * cx + (rng() - 0.5) * 140 * sc;
+            const py = h * cy + (rng() - 0.5) * 60 * sc;
+            ctx.fillStyle = j % 2 === 0 ? '#2b7a53' : '#409464';
+            ctx.beginPath();
+            ctx.ellipse(px, py, (26 + rng() * 14) * sc, (11 + rng() * 6) * sc, 0, 0.2, Math.PI * 1.9);
+            ctx.fill();
+          }
+          for (let k = 0; k < 3; k++) {
+            const bx = w * cx + (rng() - 0.5) * 90 * sc;
+            const by = h * cy + (rng() - 0.5) * 35 * sc;
+            ctx.fillStyle = k % 2 === 0 ? '#f7b2c4' : '#fff3e8';
+            for (let p = 0; p < 5; p++) {
+              ctx.beginPath();
+              ctx.ellipse(bx + (p - 2) * 5 * sc, by, 7 * sc, 4 * sc, (p - 2) * 0.25, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.fillStyle = '#f5cf5b';
+            ctx.beginPath();
+            ctx.arc(bx, by, 3.5 * sc, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        addCanvasTextureGrain(ctx, w, h, 0.045);
+        return canvas;
+      }
+
+      // =========================================================================
+      // 2. Classic Paintings Catalog
+      // =========================================================================
+
+      const CLASSIC_PAINTINGS = [
+        {
+          id: 'starry-night',
+          title: 'The Starry Night',
+          artist: 'Vincent van Gogh',
+          year: '1889',
+          movement: 'Post-Impressionism',
+          medium: 'Oil on canvas',
+          widthMeters: 0.92,
+          heightMeters: 0.73,
+          frameFinish: 'gilded',
+          hasMatBoard: false,
+          description:
+            'Swirling cobalt night sky painted from Saint-Rémy-de-Provence with luminous stars and a cypress silhouette.',
+          draw: () => drawStarryNight(640, 480),
+        },
+        {
+          id: 'mona-lisa',
+          title: 'Mona Lisa',
+          artist: 'Leonardo da Vinci',
+          year: '1503',
+          movement: 'High Renaissance',
+          medium: 'Oil on poplar panel',
+          widthMeters: 0.56,
+          heightMeters: 0.77,
+          frameFinish: 'walnut',
+          hasMatBoard: false,
+          description:
+            'Renowned portrait celebrated for delicate sfumato shading, composed stillness, and an enigmatic gaze.',
+          draw: () => drawMonaLisa(480, 640),
+        },
+        {
+          id: 'pearl-earring',
+          title: 'Girl with a Pearl Earring',
+          artist: 'Johannes Vermeer',
+          year: '1665',
+          movement: 'Dutch Golden Age',
+          medium: 'Oil on canvas',
+          widthMeters: 0.48,
+          heightMeters: 0.62,
+          frameFinish: 'ebony',
+          hasMatBoard: false,
+          description:
+            'Intimate tronie portrait lit by soft northern window light against a deep umber backdrop.',
+          draw: () => drawPearlEarring(480, 640),
+        },
+        {
+          id: 'great-wave',
+          title: 'The Great Wave off Kanagawa',
+          artist: 'Katsushika Hokusai',
+          year: '1831',
+          movement: 'Ukiyo-e',
+          medium: 'Polychrome woodblock print',
+          widthMeters: 0.84,
+          heightMeters: 0.61,
+          frameFinish: 'walnut',
+          hasMatBoard: true,
+          description:
+            'Towering Prussian-blue cresting wave framing distant Mount Fuji in the Thirty-six Views series.',
+          draw: () => drawGreatWave(640, 480),
+        },
+        {
+          id: 'water-lilies',
+          title: 'Water Lilies',
+          artist: 'Claude Monet',
+          year: '1919',
+          movement: 'Impressionism',
+          medium: 'Oil on canvas',
+          widthMeters: 1.18,
+          heightMeters: 0.66,
+          frameFinish: 'gilded',
+          hasMatBoard: false,
+          description:
+            'Panoramic Giverny pond meditation capturing floating blossoms, willow shadows, and sky reflections.',
+          draw: () => drawWaterLilies(768, 432),
+        },
+      ].map((spec) => {
+        const canvas = spec.draw();
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return {
+          ...spec,
+          texture,
+          previewUrl: canvas.toDataURL('image/jpeg', 0.9),
+        };
+      });
+
+      // =========================================================================
+      // 3. WallScanner (WebXR Plane Detection + DepthMesh Fallback)
+      // =========================================================================
+
+      const _ray = new THREE.Ray();
+      const _vecA = new THREE.Vector3();
+      const _vecB = new THREE.Vector3();
+      const _vecC = new THREE.Vector3();
+      const _quat = new THREE.Quaternion();
+      const _mat4 = new THREE.Matrix4();
+      const _raycaster = new THREE.Raycaster();
+
+      class WallScanner extends xb.Script {
+        static dependencies = {
+          world: xb.World,
+          depth: xb.Depth,
+          user: xb.User,
+          camera: THREE.Camera,
+        };
+
+        constructor() {
+          super();
+          this.visuals = new Map();
+          this.hitMeshes = [];
+          this.showWallsOverlay = true;
+          this.elapsed = 0;
+          this.invisibleHitMaterial = new THREE.MeshBasicMaterial({
+            visible: false,
+            side: THREE.DoubleSide,
+          });
+        }
+
+        init({world, depth, user, camera}) {
+          this.world = world;
+          this.depth = depth;
+          this.user = user;
+          this.camera = camera;
+        }
+
+        get wallCount() {
+          return this.visuals.size;
+        }
+
+        setWallsVisible(visible) {
+          this.showWallsOverlay = visible;
+          for (const entry of this.visuals.values()) {
+            entry.gridMaterial.uniforms.uVisible.value = visible ? 1.0 : 0.0;
+            entry.outline.visible = visible;
+          }
+        }
+
+        toggleWallsVisible() {
+          this.setWallsVisible(!this.showWallsOverlay);
+          return this.showWallsOverlay;
+        }
+
+        async triggerRescan() {
+          const session = xb.core.renderer?.xr?.getSession?.();
+          if (session && typeof session.initiateRoomCapture === 'function') {
+            try {
+              await session.initiateRoomCapture();
+              return true;
+            } catch (err) {
+              console.warn('Room capture declined or unavailable:', err);
+            }
+          }
+          return false;
+        }
+
+        update() {
+          const dt = xb.getDeltaTime();
+          this.elapsed += dt;
+          this.syncDetectedWalls();
+          for (const entry of this.visuals.values()) {
+            entry.gridMaterial.uniforms.uTime.value = this.elapsed;
+          }
+        }
+
+        syncDetectedWalls() {
+          const planeDetector = this.world?.planes;
+          if (!planeDetector) return;
+
+          const allPlanes = planeDetector.get();
+          const activeWalls = new Set();
+
+          for (const plane of allPlanes) {
+            if (!this.isWallPlane(plane)) continue;
+            activeWalls.add(plane);
+            const existing = this.visuals.get(plane);
+            if (existing) {
+              this.updateWallEntryTransform(existing);
+            } else {
+              this.createWallEntry(plane);
+            }
+          }
+
+          for (const [plane, entry] of this.visuals.entries()) {
+            if (!activeWalls.has(plane)) {
+              this.removeWallEntry(plane, entry);
+            }
+          }
+        }
+
+        isWallPlane(plane) {
+          const label = plane.label?.toLowerCase();
+          if (label === 'wall') return true;
+          if (
+            label === 'floor' ||
+            label === 'ceiling' ||
+            label === 'table' ||
+            label === 'desk' ||
+            label === 'couch' ||
+            label === 'bed'
+          ) {
+            return false;
+          }
+          if (plane.orientation?.toLowerCase() === 'vertical') return true;
+
+          plane.getWorldQuaternion(_quat);
+          _vecA.set(0, 1, 0).applyQuaternion(_quat).normalize();
+          return Math.abs(_vecA.y) < 0.35;
+        }
+
+        buildPlaneShapeGeometry(plane) {
+          let points = [];
+          if (plane.xrPlane?.polygon && plane.xrPlane.polygon.length >= 3) {
+            for (const p of plane.xrPlane.polygon) {
+              points.push(new THREE.Vector2(p.x, p.z));
+            }
+          } else if (plane.simulatorPlane?.polygon && plane.simulatorPlane.polygon.length >= 3) {
+            points = plane.simulatorPlane.polygon.map((p) => new THREE.Vector2(p.x, p.y));
+          }
+
+          if (points.length >= 3) {
+            const shape = new THREE.Shape(points);
+            const geom = new THREE.ShapeGeometry(shape);
+            geom.rotateX(Math.PI / 2);
+            geom.computeBoundingBox();
+            return geom;
+          }
+
+          const cloned = plane.geometry.clone();
+          cloned.computeBoundingBox();
+          return cloned;
+        }
+
+        createWallEntry(plane) {
+          const geometry = this.buildPlaneShapeGeometry(plane);
+          const group = new THREE.Group();
+          group.name = 'DetectedWallVisual';
+          group.xb = {pointerEvents: 'none'};
+
+          const hitMesh = new THREE.Mesh(geometry, this.invisibleHitMaterial);
+          hitMesh.xb = {pointerEvents: 'none'};
+
+          const gridMaterial = new THREE.ShaderMaterial({
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1,
+            uniforms: {
+              uTime: {value: this.elapsed},
+              uVisible: {value: this.showWallsOverlay ? 1.0 : 0.0},
+              uColor: {value: new THREE.Color(0x78c8ff)},
+              uAccent: {value: new THREE.Color(0xf4cf7b)},
+            },
+            vertexShader: `
+              varying vec3 vLocalPos;
+              void main() {
+                vLocalPos = position;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              varying vec3 vLocalPos;
+              uniform float uTime;
+              uniform float uVisible;
+              uniform vec3 uColor;
+              uniform vec3 uAccent;
+              void main() {
+                if (uVisible < 0.01) discard;
+                vec2 coord = vLocalPos.xz * 4.0;
+                vec2 grid = abs(fract(coord - 0.5) - 0.5) / fwidth(coord);
+                float line = 1.0 - min(min(grid.x, grid.y), 1.0);
+                float wave = 0.5 + 0.5 * sin(vLocalPos.x * 1.4 - uTime * 1.3 + vLocalPos.z * 0.9);
+                vec3 col = mix(uColor, uAccent, wave * 0.25);
+                float alpha = (0.045 + line * 0.16) * uVisible;
+                gl_FragColor = vec4(col, alpha);
+              }
+            `,
+          });
+
+          const overlayMesh = new THREE.Mesh(geometry, gridMaterial);
+          overlayMesh.xb = {pointerEvents: 'none'};
+          overlayMesh.renderOrder = 2;
+
+          const outline = new THREE.LineSegments(
+            new THREE.EdgesGeometry(geometry, 15),
+            new THREE.LineBasicMaterial({
+              color: 0x8ad0ff,
+              transparent: true,
+              opacity: 0.55,
+              depthWrite: false,
+            })
+          );
+          outline.visible = this.showWallsOverlay;
+          outline.xb = {pointerEvents: 'none'};
+          outline.renderOrder = 3;
+
+          group.add(hitMesh, overlayMesh, outline);
+          this.add(group);
+
+          const entry = {
+            plane,
+            group,
+            hitMesh,
+            overlayMesh,
+            outline,
+            gridMaterial,
+            worldNormal: new THREE.Vector3(),
+            lastChangedTime: plane.xrPlane?.lastChangedTime ?? 0,
+          };
+
+          this.updateWallEntryTransform(entry);
+          this.visuals.set(plane, entry);
+          this.hitMeshes.push(hitMesh);
+        }
+
+        updateWallEntryTransform(entry) {
+          const currentChangedTime = entry.plane.xrPlane?.lastChangedTime ?? 0;
+          if (currentChangedTime > entry.lastChangedTime) {
+            entry.lastChangedTime = currentChangedTime;
+            const geometry = this.buildPlaneShapeGeometry(entry.plane);
+            entry.hitMesh.geometry.dispose();
+            entry.hitMesh.geometry = geometry;
+            entry.overlayMesh.geometry = geometry;
+            entry.outline.geometry.dispose();
+            entry.outline.geometry = new THREE.EdgesGeometry(geometry, 15);
+          }
+
+          entry.plane.updateWorldMatrix(true, false);
+          entry.plane.matrixWorld.decompose(_vecA, _quat, _vecB);
+          entry.group.position.copy(_vecA);
+          entry.group.quaternion.copy(_quat);
+          entry.group.scale.copy(_vecB);
+          entry.group.updateWorldMatrix(true, true);
+          entry.worldNormal.set(0, 1, 0).applyQuaternion(_quat).normalize();
+        }
+
+        removeWallEntry(plane, entry) {
+          entry.group.removeFromParent();
+          const idx = this.hitMeshes.indexOf(entry.hitMesh);
+          if (idx !== -1) this.hitMeshes.splice(idx, 1);
+
+          entry.hitMesh.geometry.dispose();
+          entry.outline.geometry.dispose();
+          entry.outline.material.dispose();
+          entry.gridMaterial.dispose();
+          this.visuals.delete(plane);
+        }
+
+        resolveWallHit(controllerId) {
+          this.user.getRay(controllerId, _ray);
+          if (_ray.direction.lengthSq() < 0.0001) return null;
+
+          this.camera.getWorldPosition(_vecC);
+
+          // 1. Check detected wall planes first
+          if (this.hitMeshes.length > 0) {
+            _raycaster.set(_ray.origin, _ray.direction);
+            _raycaster.near = 0.2;
+            _raycaster.far = 12;
+            const hits = _raycaster.intersectObjects(this.hitMeshes, false);
+            if (hits.length > 0) {
+              const hit = hits[0];
+              const entry = this.findEntryByHitMesh(hit.object);
+              const normal = new THREE.Vector3(0, 1, 0);
+              if (entry) {
+                normal.copy(entry.worldNormal);
+              } else if (hit.face) {
+                normal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+              }
+              _vecA.subVectors(_vecC, hit.point);
+              if (normal.dot(_vecA) < 0) normal.negate();
+              if (Math.abs(normal.y) < 0.35) {
+                normal.y = 0;
+                normal.normalize();
+              }
+              return {
+                point: hit.point.clone(),
+                normal,
+                distance: hit.distance,
+                isVerticalWall: Math.abs(normal.y) < 0.38,
+                source: 'plane',
+                plane: entry?.plane,
+              };
+            }
+          }
+
+          // 2. Fallback to real-time DepthMesh
+          const depthMesh = this.depth?.depthMesh;
+          if (depthMesh) {
+            const depthHit = this.user.getIntersectionAt(depthMesh, controllerId);
+            if (depthHit) {
+              const localNormal = depthHit.normal ?? depthHit.face?.normal;
+              const normal = new THREE.Vector3(0, 0, 1);
+              if (localNormal) {
+                depthHit.object.updateWorldMatrix(true, false);
+                normal.copy(localNormal).transformDirection(depthHit.object.matrixWorld).normalize();
+              } else {
+                normal.subVectors(_vecC, depthHit.point).normalize();
+              }
+              _vecA.subVectors(_vecC, depthHit.point);
+              if (normal.dot(_vecA) < 0) normal.negate();
+
+              const isVerticalWall = Math.abs(normal.y) < 0.38;
+              if (isVerticalWall) {
+                normal.y = 0;
+                if (normal.lengthSq() > 0.001) normal.normalize();
+              }
+              return {
+                point: depthHit.point.clone(),
+                normal,
+                distance: depthHit.distance,
+                isVerticalWall,
+                source: 'depth',
+              };
+            }
+          }
+          return null;
+        }
+
+        findNearestWallSnap(worldPosition, maxDistance = 0.45) {
+          if (this.hitMeshes.length === 0) return null;
+          this.camera.getWorldPosition(_vecC);
+          let bestDist = maxDistance;
+          let bestPoint = null;
+          let bestNormal = null;
+
+          for (const entry of this.visuals.values()) {
+            const n = _vecA.copy(entry.worldNormal);
+            _vecB.subVectors(_vecC, entry.group.position);
+            if (n.dot(_vecB) < 0) n.negate();
+
+            for (const sign of [-1, 1]) {
+              _vecB.copy(n).multiplyScalar(sign);
+              _raycaster.set(worldPosition, _vecB);
+              _raycaster.near = 0;
+              _raycaster.far = bestDist;
+              const hits = _raycaster.intersectObject(entry.hitMesh, false);
+              if (hits.length > 0 && hits[0].distance < bestDist) {
+                bestDist = hits[0].distance;
+                bestPoint = hits[0].point.clone();
+                bestNormal = n.clone();
+                if (Math.abs(bestNormal.y) < 0.35) {
+                  bestNormal.y = 0;
+                  bestNormal.normalize();
+                }
+              }
+            }
+          }
+          return bestPoint && bestNormal ? {point: bestPoint, normal: bestNormal} : null;
+        }
+
+        findEntryByHitMesh(mesh) {
+          for (const entry of this.visuals.values()) {
+            if (entry.hitMesh === mesh) return entry;
+          }
+          return undefined;
+        }
+
+        static computeWallQuaternion(wallNormal, target = new THREE.Quaternion()) {
+          _vecB.set(0, 1, 0);
+          _vecA.crossVectors(_vecB, wallNormal);
+          if (_vecA.lengthSq() < 0.0001) _vecA.set(1, 0, 0);
+          else _vecA.normalize();
+          _vecC.crossVectors(wallNormal, _vecA).normalize();
+          _mat4.makeBasis(_vecA, _vecC, wallNormal);
+          return target.setFromRotationMatrix(_mat4);
+        }
+
+        dispose() {
+          for (const [plane, entry] of Array.from(this.visuals.entries())) {
+            this.removeWallEntry(plane, entry);
+          }
+          this.invisibleHitMaterial.dispose();
+        }
+      }
+
+      // =========================================================================
+      // 4. FramedPainting (Multi-part Museum Frame + Manipulation + Wall Snap)
+      // =========================================================================
+
+      let sharedShadowTexture = null;
+      function getSoftShadowTexture() {
+        if (sharedShadowTexture) return sharedShadowTexture;
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(128, 128, 52, 128, 128, 126);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+        grad.addColorStop(0.65, 'rgba(0, 0, 0, 0.25)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+        sharedShadowTexture = new THREE.CanvasTexture(canvas);
+        sharedShadowTexture.colorSpace = THREE.SRGBColorSpace;
+        return sharedShadowTexture;
+      }
+
+      const FRAME_PALETTE = {
+        gilded: {color: 0xc89d46, metalness: 0.86, roughness: 0.28, accentColor: 0xe6c36c},
+        walnut: {color: 0x4c2f1d, metalness: 0.08, roughness: 0.44, accentColor: 0xc8a052},
+        ebony: {color: 0x1d1b1a, metalness: 0.14, roughness: 0.36, accentColor: 0xd4b26a},
+      };
+
+      const _paintVec = new THREE.Vector3();
+      const _paintQuat = new THREE.Quaternion();
+
+      class FramedPainting extends xb.Script {
+        constructor(spec, initialScale = 1.0, callbacks = {}) {
+          super();
+          this.spec = spec;
+          this.targetScale = initialScale;
+          this.callbacks = callbacks;
+          this.name = `Painting: ${spec.title}`;
+
+          this.geometries = [];
+          this.materials = [];
+          this.isSelected = false;
+          this.isHovered = false;
+          this.spawnProgress = 0;
+          this.plaqueVisible = true;
+          this.wallOffset = 0.012;
+
+          this.xb = {
+            manipulation: {
+              actions: {
+                translate: {faceCamera: false},
+                scale: {minScale: 0.45, maxScale: 2.2},
+                rotate: false,
+              },
+            },
+          };
+
+          this.buildFrameAssembly();
+          this.scale.setScalar(0.05);
+        }
+
+        createHollowRectShape(outerW, outerH, innerW, innerH) {
+          const hw = outerW / 2;
+          const hh = outerH / 2;
+          const shape = new THREE.Shape();
+          shape.moveTo(-hw, -hh);
+          shape.lineTo(hw, -hh);
+          shape.lineTo(hw, hh);
+          shape.lineTo(-hw, hh);
+          shape.closePath();
+
+          const ihw = innerW / 2;
+          const ihh = innerH / 2;
+          const hole = new THREE.Path();
+          hole.moveTo(-ihw, -ihh);
+          hole.lineTo(-ihw, ihh);
+          hole.lineTo(ihw, ihh);
+          hole.lineTo(ihw, -ihh);
+          hole.closePath();
+          shape.holes.push(hole);
+          return shape;
+        }
+
+        buildFrameAssembly() {
+          const artW = this.spec.widthMeters;
+          const artH = this.spec.heightMeters;
+          const matMargin = this.spec.hasMatBoard ? 0.065 : 0.012;
+          const innerW = artW + matMargin * 2;
+          const innerH = artH + matMargin * 2;
+          const frameBar = 0.068;
+          const outerW = innerW + frameBar * 2;
+          const outerH = innerH + frameBar * 2;
+          const palette = FRAME_PALETTE[this.spec.frameFinish];
+
+          const root = new THREE.Group();
+
+          // 1. Soft Wall Contact Shadow
+          const shadowGeo = new THREE.PlaneGeometry(outerW * 1.18, outerH * 1.18);
+          const shadowMat = new THREE.MeshBasicMaterial({
+            map: getSoftShadowTexture(),
+            transparent: true,
+            opacity: 0.52,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            polygonOffsetUnits: -1,
+          });
+          const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+          shadowMesh.position.set(0, -0.015, 0.001);
+          shadowMesh.xb = {pointerEvents: 'none'};
+          this.geometries.push(shadowGeo);
+          this.materials.push(shadowMat);
+
+          // 2. Backing Board
+          const backGeo = new THREE.BoxGeometry(outerW - 0.01, outerH - 0.01, 0.008);
+          const backMat = new THREE.MeshStandardMaterial({
+            color: 0x1b1714,
+            roughness: 0.9,
+            metalness: 0.05,
+          });
+          const backMesh = new THREE.Mesh(backGeo, backMat);
+          backMesh.position.set(0, 0, 0.006);
+          backMesh.castShadow = true;
+          backMesh.receiveShadow = true;
+          this.geometries.push(backGeo);
+          this.materials.push(backMat);
+
+          // 3. Outer Beveled Frame Molding
+          const frameGeo = new THREE.ExtrudeGeometry(
+            this.createHollowRectShape(outerW, outerH, innerW, innerH),
+            {
+              depth: 0.036,
+              bevelEnabled: true,
+              bevelThickness: 0.012,
+              bevelSize: 0.011,
+              bevelSegments: 3,
+              curveSegments: 1,
+            }
+          );
+          const frameMat = new THREE.MeshStandardMaterial({
+            color: palette.color,
+            metalness: palette.metalness,
+            roughness: palette.roughness,
+          });
+          const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+          frameMesh.position.set(0, 0, 0.012);
+          frameMesh.castShadow = true;
+          frameMesh.receiveShadow = true;
+          this.geometries.push(frameGeo);
+          this.materials.push(frameMat);
+
+          // 4. Inner Gilt Fillet Lip
+          const filletGeo = new THREE.ExtrudeGeometry(
+            this.createHollowRectShape(innerW + 0.024, innerH + 0.024, innerW - 0.004, innerH - 0.004),
+            {
+              depth: 0.016,
+              bevelEnabled: true,
+              bevelThickness: 0.004,
+              bevelSize: 0.004,
+              bevelSegments: 2,
+            }
+          );
+          const filletMat = new THREE.MeshStandardMaterial({
+            color: palette.accentColor,
+            metalness: 0.88,
+            roughness: 0.22,
+          });
+          const filletMesh = new THREE.Mesh(filletGeo, filletMat);
+          filletMesh.position.set(0, 0, 0.022);
+          this.geometries.push(filletGeo);
+          this.materials.push(filletMat);
+
+          // 5. Museum Passe-partout Mat Board
+          const matGeo = new THREE.PlaneGeometry(innerW, innerH);
+          const matMaterial = new THREE.MeshStandardMaterial({
+            color: this.spec.hasMatBoard ? 0xf3ede0 : 0x241e18,
+            roughness: 0.92,
+            metalness: 0.0,
+          });
+          const matMesh = new THREE.Mesh(matGeo, matMaterial);
+          matMesh.position.set(0, 0, 0.019);
+          matMesh.receiveShadow = true;
+          this.geometries.push(matGeo);
+          this.materials.push(matMaterial);
+
+          // 6. Canvas Artwork
+          const artGeo = new THREE.PlaneGeometry(artW, artH);
+          const artMat = new THREE.MeshStandardMaterial({
+            map: this.spec.texture,
+            roughness: 0.44,
+            metalness: 0.02,
+          });
+          const artMesh = new THREE.Mesh(artGeo, artMat);
+          artMesh.position.set(0, 0, 0.023);
+          artMesh.receiveShadow = true;
+          this.geometries.push(artGeo);
+          this.materials.push(artMat);
+
+          // 7. Museum Brass Nameplate
+          const plaqueW = Math.min(outerW * 0.72, 0.42);
+          const plaqueH = 0.068;
+          this.plaqueTexture = this.createPlaqueTexture();
+          const plaqueGeo = new THREE.PlaneGeometry(plaqueW, plaqueH);
+          const plaqueMat = new THREE.MeshStandardMaterial({
+            map: this.plaqueTexture,
+            roughness: 0.35,
+            metalness: 0.25,
+          });
+          this.plaqueMesh = new THREE.Mesh(plaqueGeo, plaqueMat);
+          this.plaqueMesh.position.set(0, -(outerH / 2 + 0.065), 0.014);
+          this.geometries.push(plaqueGeo);
+          this.materials.push(plaqueMat);
+
+          const plaqueBackGeo = new THREE.BoxGeometry(plaqueW + 0.012, plaqueH + 0.012, 0.008);
+          const plaqueBackMat = new THREE.MeshStandardMaterial({
+            color: 0xc29c4b,
+            metalness: 0.85,
+            roughness: 0.28,
+          });
+          const plaqueBack = new THREE.Mesh(plaqueBackGeo, plaqueBackMat);
+          plaqueBack.position.set(0, 0, -0.005);
+          this.plaqueMesh.add(plaqueBack);
+          this.geometries.push(plaqueBackGeo);
+          this.materials.push(plaqueBackMat);
+
+          // 8. Selection / Hover Halo
+          const haloBoxGeo = new THREE.BoxGeometry(outerW + 0.045, outerH + 0.045, 0.055);
+          const haloGeo = new THREE.EdgesGeometry(haloBoxGeo);
+          haloBoxGeo.dispose();
+          const haloMat = new THREE.LineBasicMaterial({
+            color: 0xf7d070,
+            transparent: true,
+            opacity: 0,
+          });
+          this.selectionOutline = new THREE.LineSegments(haloGeo, haloMat);
+          this.selectionOutline.position.set(0, 0, 0.025);
+          this.selectionOutline.xb = {pointerEvents: 'none'};
+          this.geometries.push(haloGeo);
+          this.materials.push(haloMat);
+
+          root.add(
+            shadowMesh,
+            backMesh,
+            frameMesh,
+            filletMesh,
+            matMesh,
+            artMesh,
+            this.plaqueMesh,
+            this.selectionOutline
+          );
+          this.add(root);
+        }
+
+        createPlaqueTexture() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 640;
+          canvas.height = 112;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#181512';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.strokeStyle = '#c8a24b';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+          ctx.fillStyle = '#f5eedc';
+          ctx.font = 'bold 28px Georgia, serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(this.spec.title, canvas.width / 2, 40, canvas.width - 48);
+
+          ctx.fillStyle = '#d3be90';
+          ctx.font = '20px Georgia, serif';
+          ctx.fillText(
+            `${this.spec.artist}, ${this.spec.year}`,
+            canvas.width / 2,
+            78,
+            canvas.width - 48
+          );
+
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          return tex;
+        }
+
+        placeOnWall(point, wallNormal) {
+          _paintVec.copy(wallNormal).normalize();
+          this.position.copy(point).addScaledVector(_paintVec, this.wallOffset);
+          WallScanner.computeWallQuaternion(_paintVec, _paintQuat);
+          this.quaternion.copy(_paintQuat);
+        }
+
+        setPaintingScale(scaleFactor) {
+          this.targetScale = THREE.MathUtils.clamp(scaleFactor, 0.45, 2.2);
+          this.scale.setScalar(this.targetScale);
+        }
+
+        getPaintingScale() {
+          return this.scale.x;
+        }
+
+        setSelected(selected) {
+          this.isSelected = selected;
+          this.refreshOutline();
+        }
+
+        setPlaqueVisible(visible) {
+          this.plaqueVisible = visible;
+          this.plaqueMesh.visible = visible;
+        }
+
+        refreshOutline() {
+          const mat = this.selectionOutline.material;
+          if (this.isSelected) {
+            mat.color.setHex(0xf7d070);
+            mat.opacity = 0.95;
+          } else if (this.isHovered) {
+            mat.color.setHex(0x8ad0ff);
+            mat.opacity = 0.65;
+          } else {
+            mat.opacity = 0;
+          }
+        }
+
+        update() {
+          const dt = Math.min(xb.getDeltaTime(), 0.05);
+          if (this.spawnProgress < 1) {
+            this.spawnProgress = Math.min(1, this.spawnProgress + dt * 5.2);
+            const eased = 1 - Math.pow(1 - this.spawnProgress, 3);
+            this.scale.setScalar(THREE.MathUtils.lerp(0.05, this.targetScale, eased));
+          }
+        }
+
+        onObjectHoverEnter() {
+          this.isHovered = true;
+          this.refreshOutline();
+        }
+
+        onObjectHoverExit() {
+          this.isHovered = false;
+          this.refreshOutline();
+        }
+
+        onObjectSelectStart(event) {
+          this.callbacks.onSelect?.(this);
+          event.stopPropagation();
+        }
+
+        onObjectSelectEnd(event) {
+          event.stopPropagation();
+        }
+
+        onObjectTouchStart(event) {
+          this.callbacks.onSelect?.(this);
+          event.stopPropagation();
+        }
+
+        onObjectManipulate(event) {
+          if (event.phase === 'start') {
+            this.callbacks.onSelect?.(this);
+          } else if (event.phase === 'update') {
+            if (event.action === 'scale') {
+              this.targetScale = this.scale.x;
+              this.callbacks.onScaleChanged?.(this);
+            } else if (event.action === 'translate' && this.callbacks.wallScanner) {
+              const snap = this.callbacks.wallScanner.findNearestWallSnap(this.position, 0.35);
+              if (snap) this.placeOnWall(snap.point, snap.normal);
+            }
+          } else if (event.phase === 'end') {
+            if (event.action === 'scale') {
+              this.targetScale = this.scale.x;
+              this.callbacks.onScaleChanged?.(this);
+            }
+            if (this.callbacks.wallScanner) {
+              const snap = this.callbacks.wallScanner.findNearestWallSnap(this.position, 0.55);
+              if (snap) this.placeOnWall(snap.point, snap.normal);
+            }
+          }
+        }
+
+        dispose() {
+          this.plaqueTexture.dispose();
+          for (const g of this.geometries) g.dispose();
+          for (const m of this.materials) m.dispose();
+          this.geometries.length = 0;
+          this.materials.length = 0;
+        }
+      }
+
+      // =========================================================================
+      // 5. WallPreview (Ghost Frame Placement Reticle)
+      // =========================================================================
+
+      const _prevTargetPos = new THREE.Vector3();
+      const _prevTargetQuat = new THREE.Quaternion();
+
+      class WallPreview extends xb.Script {
+        constructor(wallScanner, initialSpec) {
+          super();
+          this.wallScanner = wallScanner;
+          this.currentSpec = initialSpec;
+          this.currentScale = 1.0;
+          this.enabled = true;
+          this.hasPose = false;
+          this.latestHit = null;
+          this.name = 'WallPlacementPreview';
+          this.xb = {pointerEvents: 'none'};
+
+          this.frameGroup = new THREE.Group();
+          this.buildVisual();
+          this.frameGroup.visible = false;
+          this.add(this.frameGroup);
+        }
+
+        init() {
+          this.user = xb.core.user;
+          this.depth = xb.core.depth;
+        }
+
+        buildVisual() {
+          this.fillMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(1, 1),
+            new THREE.MeshBasicMaterial({
+              color: 0x62e3a1,
+              transparent: true,
+              opacity: 0.16,
+              side: THREE.DoubleSide,
+              depthWrite: false,
+              polygonOffset: true,
+              polygonOffsetFactor: -2,
+              polygonOffsetUnits: -2,
+            })
+          );
+          this.fillMesh.position.z = 0.008;
+          this.fillMesh.xb = {pointerEvents: 'none'};
+
+          const borderBoxGeo = new THREE.BoxGeometry(1, 1, 0.025);
+          this.borderLines = new THREE.LineSegments(
+            new THREE.EdgesGeometry(borderBoxGeo),
+            new THREE.LineBasicMaterial({
+              color: 0x7ef7b8,
+              transparent: true,
+              opacity: 0.9,
+              depthWrite: false,
+            })
+          );
+          borderBoxGeo.dispose();
+          this.borderLines.position.z = 0.015;
+          this.borderLines.xb = {pointerEvents: 'none'};
+
+          const crossGeo = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(-0.08, 0, 0),
+            new THREE.Vector3(0.08, 0, 0),
+            new THREE.Vector3(0, -0.08, 0),
+            new THREE.Vector3(0, 0.08, 0),
+          ]);
+          this.centerCross = new THREE.LineSegments(
+            crossGeo,
+            new THREE.LineBasicMaterial({
+              color: 0xffffff,
+              transparent: true,
+              opacity: 0.75,
+              depthWrite: false,
+            })
+          );
+          this.centerCross.position.z = 0.018;
+          this.centerCross.xb = {pointerEvents: 'none'};
+
+          this.frameGroup.add(this.fillMesh, this.borderLines, this.centerCross);
+          this.applyDimensions();
+        }
+
+        setPainting(spec, scale) {
+          this.currentSpec = spec;
+          this.currentScale = scale;
+          this.applyDimensions();
+        }
+
+        setScale(scale) {
+          this.currentScale = scale;
+          this.applyDimensions();
+        }
+
+        applyDimensions() {
+          const matMargin = this.currentSpec.hasMatBoard ? 0.065 : 0.012;
+          const frameBar = 0.068;
+          const outerW = (this.currentSpec.widthMeters + (matMargin + frameBar) * 2) * this.currentScale;
+          const outerH = (this.currentSpec.heightMeters + (matMargin + frameBar) * 2) * this.currentScale;
+          this.fillMesh.scale.set(outerW, outerH, 1);
+          this.borderLines.scale.set(outerW, outerH, 1);
+        }
+
+        getLatestValidHit() {
+          return this.latestHit?.isVerticalWall ? this.latestHit : null;
+        }
+
+        isNonWallInteractiveHit(controllerId) {
+          const rayHit = this.user.getRayIntersection(controllerId);
+          if (!rayHit || !rayHit.object) return false;
+          const obj = rayHit.object;
+          if (obj === this.depth?.depthMesh) return false;
+          if (obj.xrPlane !== undefined || obj.simulatorPlane !== undefined) return false;
+          return true;
+        }
+
+        getPreferredControllerIds() {
+          const ids = [];
+          const controllers = this.user.controllers ?? [];
+          for (let i = controllers.length - 1; i >= 0; i--) {
+            if (controllers[i]?.visible) ids.push(i);
+          }
+          if (ids.length === 0) {
+            for (let i = 0; i < controllers.length; i++) ids.push(i);
+          }
+          if (ids.length === 0) ids.push(0);
+          return ids;
+        }
+
+        update() {
+          if (!this.enabled || !this.user) {
+            this.frameGroup.visible = false;
+            this.latestHit = null;
+            return;
+          }
+
+          const dt = Math.min(xb.getDeltaTime(), 0.05);
+          const ids = this.getPreferredControllerIds();
+          let bestHit = null;
+
+          for (const id of ids) {
+            if (this.isNonWallInteractiveHit(id)) {
+              this.frameGroup.visible = false;
+              this.latestHit = null;
+              return;
+            }
+            const hit = this.wallScanner.resolveWallHit(id);
+            if (hit) {
+              bestHit = hit;
+              break;
+            }
+          }
+
+          this.latestHit = bestHit;
+          if (!bestHit) {
+            this.frameGroup.visible = false;
+            this.hasPose = false;
+            return;
+          }
+
+          this.frameGroup.visible = true;
+          _prevTargetPos.copy(bestHit.point).addScaledVector(bestHit.normal, 0.012);
+          WallScanner.computeWallQuaternion(bestHit.normal, _prevTargetQuat);
+
+          if (!this.hasPose) {
+            this.frameGroup.position.copy(_prevTargetPos);
+            this.frameGroup.quaternion.copy(_prevTargetQuat);
+            this.hasPose = true;
+          } else {
+            const alpha = 1 - Math.exp(-18 * dt);
+            this.frameGroup.position.lerp(_prevTargetPos, alpha);
+            this.frameGroup.quaternion.slerp(_prevTargetQuat, alpha);
+          }
+
+          if (bestHit.isVerticalWall) {
+            this.fillMesh.material.color.setHex(0x62e3a1);
+            this.fillMesh.material.opacity = 0.16;
+            this.borderLines.material.color.setHex(0x9ffad0);
+            this.borderLines.material.opacity = 0.92;
+          } else {
+            this.fillMesh.material.color.setHex(0xf59e0b);
+            this.fillMesh.material.opacity = 0.08;
+            this.borderLines.material.color.setHex(0xfbbf24);
+            this.borderLines.material.opacity = 0.5;
+          }
+        }
+
+        dispose() {
+          this.fillMesh.geometry.dispose();
+          this.fillMesh.material.dispose();
+          this.borderLines.geometry.dispose();
+          this.borderLines.material.dispose();
+          this.centerCross.geometry.dispose();
+          this.centerCross.material.dispose();
+        }
+      }
+
+      // =========================================================================
+      // 6. GalleryUI (Floating Spatial Cards & Bottom View-Space Hint)
+      // =========================================================================
+
+      class GalleryUI extends xb.Script {
+        constructor(handlers) {
+          super();
+          this.handlers = handlers;
+          this.selectedPainting = null;
+          this.buildPaletteCard();
+          this.buildInspectorCard();
+          this.buildBottomOverlay();
+        }
+
+        shortLabel(title) {
+          if (title.includes('Starry')) return 'Starry Night';
+          if (title.includes('Mona')) return 'Mona Lisa';
+          if (title.includes('Pearl')) return 'Pearl Earring';
+          if (title.includes('Wave')) return 'Great Wave';
+          if (title.includes('Lilies')) return 'Water Lilies';
+          return title;
+        }
+
+        buildPaletteCard() {
+          this.statusText = new xb.UIText({
+            text: 'Scanning walls...',
+            style: {fontSize: 15, color: '#8ad0ff', textAlign: 'right'},
+          });
+
+          const header = new xb.UIPanel({
+            style: {
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+            },
+            children: [
+              new xb.UIPanel({
+                style: {flexDirection: 'row', alignItems: 'center', gap: 10},
+                children: [
+                  new xb.UIIcon({
+                    icon: 'museum',
+                    style: {width: 30, height: 30, color: '#f4cf7b'},
+                  }),
+                  new xb.UIText({
+                    text: 'ATELIER XR',
+                    style: {fontSize: 22, fontWeight: 'bold'},
+                  }),
+                ],
+              }),
+              this.statusText,
+            ],
+          });
+
+          this.artworkButtons = CLASSIC_PAINTINGS.map((painting, index) => {
+            return new xb.UIButton({
+              ariaLabel: `Select ${painting.title}`,
+              onClick: () => this.selectCatalogIndex(index),
+              style: {
+                flexGrow: 1,
+                flexBasis: 0,
+                height: 112,
+                padding: 6,
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 6,
+                borderRadius: 14,
+                backgroundColor:
+                  index === 0 ? 'rgba(244, 207, 123, 0.20)' : 'rgba(255, 255, 255, 0.06)',
+                borderColor: index === 0 ? '#f4cf7b' : 'rgba(255, 255, 255, 0.12)',
+                borderWidth: index === 0 ? 2 : 1,
+              },
+              children: [
+                new xb.UIImage({
+                  src: painting.previewUrl,
+                  ariaLabel: painting.title,
+                  pointerEvents: 'none',
+                  style: {
+                    width: '100%',
+                    height: 68,
+                    objectFit: 'cover',
+                    borderRadius: 8,
+                  },
+                }),
+                new xb.UIText({
+                  text: this.shortLabel(painting.title),
+                  pointerEvents: 'none',
+                  style: {
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    width: '100%',
+                    overflow: 'hidden',
+                  },
+                }),
+              ],
+            });
+          });
+
+          const galleryRow = new xb.UIPanel({
+            style: {width: '100%', flexDirection: 'row', gap: 8, alignItems: 'stretch'},
+            children: this.artworkButtons,
+          });
+
+          const initial = CLASSIC_PAINTINGS[0];
+          this.selectedTitleText = new xb.UIText({
+            text: `${initial.title} — ${initial.artist} (${initial.year})`,
+            style: {fontSize: 16, fontWeight: 'bold', color: '#f6ebd0'},
+          });
+          this.selectedDescText = new xb.UIText({
+            text: initial.description,
+            style: {fontSize: 13, lineHeight: 1.35, opacity: 0.78, whiteSpace: 'pre-line'},
+          });
+
+          const infoPanel = new xb.UIPanel({
+            style: {
+              width: '100%',
+              padding: 12,
+              gap: 4,
+              borderRadius: 14,
+              backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            },
+            children: [this.selectedTitleText, this.selectedDescText],
+          });
+
+          this.scaleValueText = new xb.UIText({
+            text: '100%',
+            style: {fontSize: 15, fontWeight: 'bold', color: '#f4cf7b'},
+          });
+          const defaultScaleSlider = new xb.UISlider({
+            ariaLabel: 'Placement painting scale',
+            min: 0.5,
+            max: 1.8,
+            step: 0.05,
+            value: 1.0,
+            style: {width: '100%', height: 36},
+            onInput: (value) => {
+              this.scaleValueText.text = `${Math.round(value * 100)}%`;
+              this.handlers.onDefaultScaleChanged(value);
+            },
+          });
+
+          const scaleHeader = new xb.UIPanel({
+            style: {
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            },
+            children: [
+              new xb.UIText({text: 'Frame Size', style: {fontSize: 15, opacity: 0.85}}),
+              this.scaleValueText,
+            ],
+          });
+
+          this.wallsButton = new xb.UIButton({
+            label: 'Walls On',
+            icon: 'grid_on',
+            style: {flexGrow: 1},
+            onClick: () => {
+              const visible = this.handlers.onToggleWalls();
+              this.wallsButton.label = visible ? 'Walls On' : 'Walls Off';
+            },
+          });
+
+          const rescanButton = new xb.UIButton({
+            label: 'Scan',
+            icon: 'radar',
+            style: {flexGrow: 1},
+            onClick: () => this.handlers.onRescanRoom(),
+          });
+
+          this.undoButton = new xb.UIButton({
+            label: 'Undo',
+            icon: 'undo',
+            disabled: true,
+            style: {flexGrow: 1},
+            onClick: () => this.handlers.onUndoLast(),
+          });
+
+          this.clearButton = new xb.UIButton({
+            label: 'Clear',
+            icon: 'delete_sweep',
+            disabled: true,
+            style: {flexGrow: 1},
+            onClick: () => this.handlers.onClearAll(),
+          });
+
+          const actionsRow = new xb.UIPanel({
+            style: {width: '100%', flexDirection: 'row', gap: 8},
+            children: [this.wallsButton, rescanButton, this.undoButton, this.clearButton],
+          });
+
+          this.paletteCard = new xb.UICard({
+            size: {width: 0.72, height: 'auto'},
+            manipulation: true,
+            edge: true,
+            style: {flexDirection: 'column', gap: 12, padding: 18},
+            children: [
+              header,
+              galleryRow,
+              infoPanel,
+              scaleHeader,
+              defaultScaleSlider,
+              actionsRow,
+            ],
+          });
+          this.paletteCard.name = 'Atelier Palette';
+          this.paletteCard.position.set(-0.56, 1.32, -1.05);
+          this.paletteCard.rotation.y = 0.34;
+          this.add(this.paletteCard);
+        }
+
+        buildInspectorCard() {
+          this.inspectorTitle = new xb.UIText({
+            text: 'Selected Artwork',
+            style: {fontSize: 18, fontWeight: 'bold', color: '#f6ebd0'},
+          });
+          this.inspectorMeta = new xb.UIText({
+            text: '',
+            style: {fontSize: 13, opacity: 0.78, whiteSpace: 'pre-line', lineHeight: 1.35},
+          });
+          this.inspectorScaleValue = new xb.UIText({
+            text: '100%',
+            style: {fontSize: 15, fontWeight: 'bold', color: '#f4cf7b'},
+          });
+          this.inspectorSlider = new xb.UISlider({
+            ariaLabel: 'Selected painting scale',
+            min: 0.45,
+            max: 2.2,
+            step: 0.05,
+            value: 1.0,
+            style: {width: '100%', height: 36},
+            onInput: (value) => {
+              if (!this.selectedPainting) return;
+              this.inspectorScaleValue.text = `${Math.round(value * 100)}%`;
+              this.handlers.onInspectorScaleChanged(this.selectedPainting, value);
+            },
+          });
+
+          this.plaqueButton = new xb.UIButton({
+            label: 'Plaque On',
+            icon: 'badge',
+            style: {flexGrow: 1},
+            onClick: () => {
+              if (!this.selectedPainting) return;
+              const shown = this.handlers.onTogglePlaque(this.selectedPainting);
+              this.plaqueButton.label = shown ? 'Plaque On' : 'Plaque Off';
+            },
+          });
+
+          const snapButton = new xb.UIButton({
+            label: 'Snap Wall',
+            icon: 'vertical_align_center',
+            style: {flexGrow: 1},
+            onClick: () => {
+              if (this.selectedPainting) this.handlers.onSnapToWall(this.selectedPainting);
+            },
+          });
+
+          const removeButton = new xb.UIButton({
+            label: 'Remove',
+            icon: 'delete',
+            style: {flexGrow: 1},
+            onClick: () => {
+              if (this.selectedPainting) this.handlers.onRemovePainting(this.selectedPainting);
+            },
+          });
+
+          const closeButton = new xb.UIButton({
+            icon: 'close',
+            ariaLabel: 'Close painting inspector',
+            style: {width: 40, height: 40, padding: 0},
+            onClick: () => this.handlers.onDeselectPainting(),
+          });
+
+          this.inspectorCard = new xb.UICard({
+            size: {width: 0.46, height: 'auto'},
+            manipulation: true,
+            edge: true,
+            visible: false,
+            style: {flexDirection: 'column', gap: 10, padding: 16},
+            children: [
+              new xb.UIPanel({
+                style: {
+                  width: '100%',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                },
+                children: [this.inspectorTitle, closeButton],
+              }),
+              this.inspectorMeta,
+              new xb.UIPanel({
+                style: {
+                  width: '100%',
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                },
+                children: [
+                  new xb.UIText({text: 'Artwork Scale', style: {fontSize: 14, opacity: 0.85}}),
+                  this.inspectorScaleValue,
+                ],
+              }),
+              this.inspectorSlider,
+              new xb.UIPanel({
+                style: {width: '100%', flexDirection: 'row', gap: 8},
+                children: [this.plaqueButton, snapButton, removeButton],
+              }),
+            ],
+          });
+          this.inspectorCard.name = 'Painting Inspector';
+          this.inspectorCard.position.set(0.56, 1.32, -1.05);
+          this.inspectorCard.rotation.y = -0.34;
+          this.add(this.inspectorCard);
+        }
+
+        buildBottomOverlay() {
+          this.hintText = new xb.UIText({
+            text: 'Aim at a detected wall and click, pull trigger, or pinch to hang. Drag any painting to move or resize.',
+            pointerEvents: 'none',
+            style: {fontSize: 16, lineHeight: 1.3, textAlign: 'center', opacity: 0.9},
+          });
+
+          this.bottomOverlay = new xb.UIOverlay({
+            style: {
+              width: 780,
+              position: 'absolute',
+              left: '50%',
+              bottom: 24,
+              transform: {translateX: '-50%'},
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 14,
+              padding: 12,
+            },
+            children: [new xb.UIExitButton(), this.hintText],
+          });
+          this.bottomOverlay.name = 'Atelier Bottom Hint';
+          this.add(this.bottomOverlay);
+        }
+
+        selectCatalogIndex(index) {
+          const spec = CLASSIC_PAINTINGS[index];
+          this.artworkButtons.forEach((btn, idx) => {
+            const selected = idx === index;
+            btn.style.backgroundColor = selected
+              ? 'rgba(244, 207, 123, 0.20)'
+              : 'rgba(255, 255, 255, 0.06)';
+            btn.style.borderColor = selected ? '#f4cf7b' : 'rgba(255, 255, 255, 0.12)';
+            btn.style.borderWidth = selected ? 2 : 1;
+          });
+          this.selectedTitleText.text = `${spec.title} — ${spec.artist} (${spec.year})`;
+          this.selectedDescText.text = spec.description;
+          this.handlers.onSelectCatalogPainting(spec);
+        }
+
+        updateStatus(wallCount, placedCount) {
+          const wallLabel =
+            wallCount === 0
+              ? 'Look around to scan walls'
+              : `${wallCount} ${wallCount === 1 ? 'wall' : 'walls'} detected`;
+          this.statusText.text = placedCount > 0 ? `${wallLabel} • ${placedCount} hung` : wallLabel;
+          this.statusText.style.color = wallCount > 0 ? '#7ef7b8' : '#8ad0ff';
+          this.undoButton.disabled = placedCount === 0;
+          this.clearButton.disabled = placedCount === 0;
+        }
+
+        showInspector(painting) {
+          this.selectedPainting = painting;
+          if (!painting) {
+            this.inspectorCard.visible = false;
+            return;
+          }
+          const s = painting.spec;
+          this.inspectorTitle.text = s.title;
+          this.inspectorMeta.text = `${s.artist} (${s.year})\n${s.movement} • ${s.medium}`;
+          const currentScale = painting.getPaintingScale();
+          this.inspectorSlider.value = currentScale;
+          this.inspectorScaleValue.text = `${Math.round(currentScale * 100)}%`;
+          this.plaqueButton.label = painting.plaqueVisible ? 'Plaque On' : 'Plaque Off';
+          this.inspectorCard.visible = true;
+        }
+
+        syncInspectorScale(painting) {
+          if (this.selectedPainting !== painting) return;
+          const s = painting.getPaintingScale();
+          this.inspectorSlider.value = s;
+          this.inspectorScaleValue.text = `${Math.round(s * 100)}%`;
+        }
+
+        setHint(message) {
+          this.hintText.text = message;
+        }
+      }
+
+      // =========================================================================
+      // 7. AtelierScene (Main Application Script)
+      // =========================================================================
+
+      class AtelierScene extends xb.Script {
+        static dependencies = {
+          depth: xb.Depth,
+          user: xb.User,
+          world: xb.World,
+          camera: THREE.Camera,
+        };
+
+        constructor() {
+          super();
+          this.placedPaintings = [];
+          this.selectedPainting = null;
+          this.activeSpec = CLASSIC_PAINTINGS[0];
+          this.defaultScale = 1.0;
+          this.envMapTexture = null;
+          this.lastWallCount = -1;
+          this.lastPlacedCount = -1;
+          this.uiValidated = false;
+          this.frameCounter = 0;
+        }
+
+        init({depth, user}) {
+          this.depth = depth;
+          this.user = user;
+          this.setupLightingAndEnvironment();
+
+          this.wallScanner = new WallScanner();
+          this.add(this.wallScanner);
+
+          this.wallPreview = new WallPreview(this.wallScanner, this.activeSpec);
+          this.add(this.wallPreview);
+
+          this.galleryUI = new GalleryUI({
+            onSelectCatalogPainting: (spec) => {
+              this.activeSpec = spec;
+              this.wallPreview.setPainting(spec, this.defaultScale);
+            },
+            onDefaultScaleChanged: (scale) => {
+              this.defaultScale = scale;
+              this.wallPreview.setScale(scale);
+            },
+            onToggleWalls: () => {
+              const visible = this.wallScanner.toggleWallsVisible();
+              this.galleryUI.setHint(
+                visible
+                  ? 'Wall scan grid shown. Aim at any wall and click, trigger, or pinch to hang.'
+                  : 'Wall scan grid hidden for clean gallery viewing.'
+              );
+              return visible;
+            },
+            onRescanRoom: () => void this.handleRescan(),
+            onUndoLast: () => this.undoLastPainting(),
+            onClearAll: () => this.clearAllPaintings(),
+            onInspectorScaleChanged: (painting, scale) => painting.setPaintingScale(scale),
+            onSnapToWall: (painting) => {
+              const snap = this.wallScanner.findNearestWallSnap(painting.position, 1.5);
+              if (snap) {
+                painting.placeOnWall(snap.point, snap.normal);
+                this.galleryUI.setHint(`Snapped "${painting.spec.title}" flush to wall.`);
+              } else {
+                this.galleryUI.setHint('No detected wall within 1.5 m to snap to.');
+              }
+            },
+            onTogglePlaque: (painting) => {
+              const next = !painting.plaqueVisible;
+              painting.setPlaqueVisible(next);
+              return next;
+            },
+            onRemovePainting: (painting) => this.removePainting(painting),
+            onDeselectPainting: () => this.selectPlacedPainting(null),
+          });
+          this.add(this.galleryUI);
+        }
+
+        setupLightingAndEnvironment() {
+          this.add(new THREE.HemisphereLight(0xfff7ea, 0x3b4454, 1.9));
+
+          const keyLight = new THREE.DirectionalLight(0xfff1d6, 2.2);
+          keyLight.position.set(2.5, 4.5, 2.0);
+          keyLight.castShadow = true;
+          keyLight.shadow.mapSize.set(1024, 1024);
+          keyLight.shadow.bias = -0.0005;
+          keyLight.shadow.normalBias = 0.02;
+          this.add(keyLight);
+
+          const fillLight = new THREE.DirectionalLight(0xd9e8ff, 0.85);
+          fillLight.position.set(-3.0, 2.2, -1.5);
+          this.add(fillLight);
+
+          const renderer = xb.core.renderer;
+          const scene = xb.core.scene;
+          if (renderer && scene && 'capabilities' in renderer) {
+            try {
+              const maxAniso = renderer.capabilities?.getMaxAnisotropy?.() ?? 4;
+              for (const item of CLASSIC_PAINTINGS) {
+                item.texture.anisotropy = Math.min(maxAniso, 8);
+              }
+              const pmrem = new THREE.PMREMGenerator(renderer);
+              const roomEnv = new RoomEnvironment();
+              this.envMapTexture = pmrem.fromScene(roomEnv, 0.04).texture;
+              scene.environment = this.envMapTexture;
+              roomEnv.dispose();
+              pmrem.dispose();
+            } catch (err) {
+              console.warn('RoomEnvironment PMREM skipped:', err);
+            }
+          }
+        }
+
+        async handleRescan() {
+          const started = await this.wallScanner.triggerRescan();
+          if (started) {
+            this.galleryUI.setHint('Room scan started — look around your walls to map surfaces.');
+          } else {
+            this.wallScanner.setWallsVisible(true);
+            this.galleryUI.setHint(
+              'Look around your room to detect vertical walls, or aim directly at any wall.'
+            );
+          }
+        }
+
+        update() {
+          this.frameCounter++;
+          const wallCount = this.wallScanner.wallCount;
+          const placedCount = this.placedPaintings.length;
+          if (wallCount !== this.lastWallCount || placedCount !== this.lastPlacedCount) {
+            this.lastWallCount = wallCount;
+            this.lastPlacedCount = placedCount;
+            this.galleryUI.updateStatus(wallCount, placedCount);
+          }
+
+          if (!this.uiValidated && this.frameCounter > 20) {
+            this.uiValidated = true;
+            const report = xb.ui?.validate?.();
+            if (report && !report.ok) {
+              console.warn('Spatial UI validation issues:', report.issues);
+            }
+          }
+        }
+
+        isInteractiveTarget(target) {
+          if (!target) return false;
+          if (target === this.depth?.depthMesh) return false;
+          if (target.xrPlane !== undefined || target.simulatorPlane !== undefined) return false;
+          return true;
+        }
+
+        onSelect(event) {
+          if (this.isInteractiveTarget(event.target)) return;
+
+          const controllerId = event.source.controller?.userData?.id ?? 0;
+          const hit =
+            this.wallScanner.resolveWallHit(controllerId) ??
+            this.wallPreview.getLatestValidHit();
+
+          if (!hit) {
+            this.selectPlacedPainting(null);
+            return;
+          }
+
+          if (!hit.isVerticalWall) {
+            this.galleryUI.setHint(
+              'That looks like a floor or table. Aim at a vertical wall (green frame) to hang a painting.'
+            );
+            return;
+          }
+
+          this.hangPaintingAt(hit.point, hit.normal);
+        }
+
+        hangPaintingAt(point, wallNormal) {
+          const painting = new FramedPainting(this.activeSpec, this.defaultScale, {
+            wallScanner: this.wallScanner,
+            onSelect: (p) => this.selectPlacedPainting(p),
+            onScaleChanged: (p) => this.galleryUI.syncInspectorScale(p),
+          });
+          painting.placeOnWall(point, wallNormal);
+          this.add(painting);
+          this.placedPaintings.push(painting);
+          this.selectPlacedPainting(painting);
+          xb.core.sound?.soundSynthesizer?.playPresetTone?.('ACTIVATE');
+          this.galleryUI.setHint(
+            `Hung "${this.activeSpec.title}". Drag to reposition, two-hand pinch to resize, or tap another wall.`
+          );
+        }
+
+        selectPlacedPainting(painting) {
+          if (this.selectedPainting && this.selectedPainting !== painting) {
+            this.selectedPainting.setSelected(false);
+          }
+          this.selectedPainting = painting;
+          if (painting) painting.setSelected(true);
+          this.galleryUI.showInspector(painting);
+        }
+
+        removePainting(painting) {
+          const idx = this.placedPaintings.indexOf(painting);
+          if (idx !== -1) this.placedPaintings.splice(idx, 1);
+          if (this.selectedPainting === painting) this.selectPlacedPainting(null);
+          painting.removeFromParent();
+          painting.dispose();
+          this.galleryUI.setHint(`Removed "${painting.spec.title}".`);
+        }
+
+        undoLastPainting() {
+          const last = this.placedPaintings.pop();
+          if (!last) return;
+          if (this.selectedPainting === last) this.selectPlacedPainting(null);
+          last.removeFromParent();
+          last.dispose();
+          this.galleryUI.setHint(`Removed "${last.spec.title}".`);
+        }
+
+        clearAllPaintings() {
+          this.selectPlacedPainting(null);
+          for (const painting of this.placedPaintings) {
+            painting.removeFromParent();
+            painting.dispose();
+          }
+          this.placedPaintings.length = 0;
+          this.galleryUI.setHint('Cleared all paintings from the room.');
+        }
+
+        onKeyDown(event) {
+          if (event.code >= 'Digit1' && event.code <= 'Digit5') {
+            const idx = Number(event.code.replace('Digit', '')) - 1;
+            if (idx >= 0 && idx < CLASSIC_PAINTINGS.length) {
+              this.galleryUI.selectCatalogIndex(idx);
+            }
+          } else if (event.code === 'KeyZ') {
+            this.undoLastPainting();
+          } else if (event.code === 'KeyG') {
+            const visible = this.wallScanner.toggleWallsVisible();
+            this.galleryUI.wallsButton.label = visible ? 'Walls On' : 'Walls Off';
+          } else if (
+            (event.code === 'Delete' || event.code === 'Backspace') &&
+            this.selectedPainting
+          ) {
+            this.removePainting(this.selectedPainting);
+          } else if (event.code === 'Escape') {
+            this.selectPlacedPainting(null);
+          }
+        }
+
+        dispose() {
+          this.clearAllPaintings();
+          if (this.envMapTexture) {
+            if (xb.core.scene?.environment === this.envMapTexture) {
+              xb.core.scene.environment = null;
+            }
+            this.envMapTexture.dispose();
+            this.envMapTexture = null;
+          }
+        }
+      }
+
+      // =========================================================================
+      // 8. XR Blocks Initialization
+      // =========================================================================
+
+      const options = new xb.Options();
+      options.enableReticles();
+      options.reticles.projectOnDepthMesh = true;
+
+      options.depth = new xb.DepthOptions(xb.xrDepthMeshOptions);
+      options.depth.depthMesh.updateFullResolutionGeometry = true;
+      options.depth.depthMesh.updateVertexNormals = true;
+      options.depth.depthMesh.renderShadow = true;
+      options.depth.depthTexture.enabled = true;
+      options.depth.occlusion.enabled = true;
+      options.depth.matchDepthView = false;
+
+      options.enablePlaneDetection();
+      options.world.planes.showDebugVisualizations = false;
+      options.world.initiateRoomCapture = true;
+
+      options.enableHands();
+      options.hands.visualization = true;
+      options.enableHandRays();
+
+      options.setAppTitle('Atelier XR');
+      options.setAppDescription(
+        'Scan your room, detect walls, and hang classic museum paintings with mouse, Meta Quest controllers, or hand tracking.'
+      );
+      options.simulator.instructions.customInstructions = [
+        {
+          header: 'Hang Classic Paintings',
+          description:
+            'Aim at any detected wall and click, pull trigger, or pinch to hang the selected masterpiece. Drag paintings to move or two-hand pinch to resize.',
+        },
+      ];
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        xb.ui.theme = 'grayGlass';
+        xb.add(new AtelierScene());
+        await xb.init(options);
+      });
+    </script>
   </body>
 </html>
